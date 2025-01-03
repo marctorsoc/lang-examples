@@ -53,3 +53,5 @@ coverage/
 .env.production.local
 *egg-info
 *pyc
+
+out-of-git
