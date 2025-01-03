@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lang_examples_common"
+version = "0.1.0"
+description = "Common utils used across the repo"
+authors = [
+    { name = "marctorsoc" }
+]
+dependencies = [
+    "ipykernel",
+    "pandas",
+    "langchain",
+    "langchain_llama",
+    "langfuse",
+    "python-dotenv",
+    "streamlit"
+]
+
+[tool.setuptools.packages.find]
+exclude = ["*.tests", "*.tests.*", "tests.*", "tests"]

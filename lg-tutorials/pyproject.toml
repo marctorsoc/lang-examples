@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lg-tutorials"
+version = "0.1.0"
+description = "The first tutorial on langgraph's page"
+authors = [
+    { name = "marctorsoc" }
+]
+dependencies = [
+    "ipykernel",
+    "pandas",
+    "langchain",
+    "langgraph",
+    "ollama",
+    "langchain_ollama",
+    "langchain_openai",
+    "langchain_community",
+    "tavily-python",
+    "langfuse",
+    "python-dotenv",
+    "streamlit",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["*.tests", "*.tests.*", "tests.*", "tests"]
