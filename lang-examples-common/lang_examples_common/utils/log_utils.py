@@ -2,7 +2,7 @@ import logging
 import re
 import uuid
 
-from langfuse_tutorial.example1.display_utils import display_foldable
+from lang_examples_common.utils.display_utils import display_foldable
 
 log = logging.getLogger("langfuse-tutorial")
 
@@ -13,6 +13,7 @@ STRING_TO_LEVEL = dict(
     error=logging.ERROR,
     critical=logging.CRITICAL,
 )
+
 
 def log_and_add_to_report_critical(msg, class_name="p"):
     log_and_add_to_report(msg, "critical", class_name=class_name)
@@ -31,10 +32,13 @@ def log_and_add_to_report(msg, level, class_name="p"):
     log.log(level_value, msg)
 
     html = f"<{class_name}>{msg}</{class_name}>"
-    html = re.sub('`(.*?)`', r'<code>\1</code>', html)  # add code blocks to the html report
+    html = re.sub(
+        "`(.*?)`", r"<code>\1</code>", html
+    )  # add code blocks to the html report
     with open("report.html", "a") as f:
         f.write(html)
         f.write("\n")
+
 
 def start_collapsible_section(show_open: bool = False):
     with open("report.html", "a") as f:
@@ -48,9 +52,12 @@ def end_collapsible_section():
         f.write("</details>\n")
         f.write("\n")
 
+
 def add_html_to_report(html):
     with open("report.html", "a") as f:
-        html = re.sub('`(.*?)`', r'<code>\1</code>', html)  # add code blocks to the html report
+        html = re.sub(
+            "`(.*?)`", r"<code>\1</code>", html
+        )  # add code blocks to the html report
         f.write(html)
         f.write("\n")
 
@@ -147,7 +154,9 @@ END_REPORT_HTML = """
 """
 
 
-def create_foldable_with_multi_table(tables, expand_name, dropdown_label="Select Table"):
+def create_foldable_with_multi_table(
+    tables, expand_name, dropdown_label="Select Table"
+):
     """
     Display foldable with multiple tables
     """
@@ -164,7 +173,9 @@ def create_foldable_with_multi_table(tables, expand_name, dropdown_label="Select
     return html
 
 
-def create_multi_table_html(uid, tables: dict[str, str], dropdown_label="Select Table") -> str:
+def create_multi_table_html(
+    uid, tables: dict[str, str], dropdown_label="Select Table"
+) -> str:
     """
     Create html for multiple tables with a dropdown to select which table to show
     """
@@ -173,7 +184,7 @@ def create_multi_table_html(uid, tables: dict[str, str], dropdown_label="Select 
     uid = str(uuid.uuid4())
     html = '<div style="margin: 20">\n'
     html += f'<label for="tableSelect-{uid}">{dropdown_label}</label>\n'
-    html += f'<select id="tableSelect-{uid}" onchange="updateTables(\'tableSelect-{uid}\', \'{uid}\')">\n'
+    html += f"<select id=\"tableSelect-{uid}\" onchange=\"updateTables('tableSelect-{uid}', '{uid}')\">\n"
     for idx, table_name in enumerate(tables):
         selected = " selected" if idx == 0 else ""
         html += f'<option value="table-container-{uid}-{idx}"{selected}>{table_name}</option>\n'

@@ -5,28 +5,48 @@ from typing import Callable
 
 import tiktoken
 from dotenv import load_dotenv
+from lang_examples_common.paths import ENV_PATH
 from langchain.output_parsers import PydanticOutputParser
 from langchain.output_parsers.json import SimpleJsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
+from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from langfuse.callback import CallbackHandler
 from pydantic import BaseModel
 
-from langfuse_tutorial.paths import ENV_PATH
-
 assert load_dotenv(ENV_PATH, override=True), "Failed to load .env file"
 
+def get_family(model):
+    if "llama" in model:
+        return "llama"
+    elif "gpt" in model:
+        return "openai"
+    else:
+        raise NotImplementedError(f"Unknown model: {model}")
 
 def get_chat_llm(
-    model_name="gpt-4o-mini",
+    model="llama3-groq-tool-use:latest",  # "gpt-4o-mini", "llama3-groq-tool-use:latest", "llama3"
+    family=None,  # openai, llama
     temperature: float = 0.0,
     max_retries: int = 3,
     **llm_kwargs,
 ):
-    llm = ChatOpenAI(
-        model=model_name,
-        api_key=os.getenv(f"OPENAI_API_KEY"),
+    if family is None:
+        family = get_family(model)
+        
+    if family != "llama":
+        env_name = f"{family.upper()}_API_KEY"
+        llm_kwargs["api_key"] = os.getenv(env_name)
+
+    match family:
+        case "openai":
+            constructor = ChatOpenAI
+        case "llama":
+            constructor = ChatOllama
+
+    llm = constructor(
+        model=model,
         temperature=temperature,
         max_retries=max_retries,
         request_timeout=60,
@@ -39,7 +59,8 @@ def create_chain(
     prompt_message,
     pydantic_object: BaseModel | None = None,
     partial_kwargs: dict = {},
-    model_name="GPT4O",
+    model_name="llama3.2",
+    family="llama",
     temperature=0,
     few_shot_examples: tuple = (),
     **llm_kwargs,
@@ -52,7 +73,7 @@ def create_chain(
     else:
         - add a SimpleJsonOutputParser to the chain
     """
-    llm = get_chat_llm(model_name=model_name, temperature=temperature, **llm_kwargs)
+    llm = get_chat_llm(model=model_name, family=family, temperature=temperature, **llm_kwargs)
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", prompt_message),
@@ -72,10 +93,7 @@ def create_chain(
 
 def postprocess_llm_output(llm_output):
     new_output = (
-        llm_output.content
-        .replace("{{", "{")
-        .replace("}}", "}")
-        .replace("\\/", "/")
+        llm_output.content.replace("{{", "{").replace("}}", "}").replace("\\/", "/")
     )
     try:
         json.loads(new_output)
@@ -93,16 +111,16 @@ def postprocess_llm_output(llm_output):
 def invoke_with_retries(
     chain,
     query,
-    validator: Callable | None =None,
+    validator: Callable | None = None,
     name: str = "",
     session_id: str = "",
     tags: list[str] = [],
-    visualizer: Callable | None =None,
+    visualizer: Callable | None = None,
     max_retries: int = 5,
     logger: Callable = print,
 ):
     """
-    Run invoke a max of `max_retries` times, using a `validator` and potentially 
+    Run invoke a max of `max_retries` times, using a `validator` and potentially
     showing failures via the `visualizer`. It logs everything to langfuse, as long
     as it is enabled.
 
@@ -123,7 +141,9 @@ def invoke_with_retries(
     response = None
     for i in range(max_retries):
         try:
-            response = chain.invoke(dict(query=query), config=dict(callbacks=[langfuse_handler]))
+            response = chain.invoke(
+                dict(query=query), config=dict(callbacks=[langfuse_handler])
+            )
             if validator is not None:
                 validator(response)
             if i > 0:

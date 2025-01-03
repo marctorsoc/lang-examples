@@ -1,9 +1,31 @@
+import textwrap
 from string import Template
 from typing import Callable, Iterable
 
 import pandas as pd
-from IPython.display import display_html
+from IPython.display import display, display_html
 from pandas.io.formats.style import Styler
+
+
+def wrap_text(text: str, width: int = 80) -> str:
+    lines = text.split("\n")
+    wrapped_lines = [textwrap.fill(line, width) for line in lines]
+    return "\n".join(wrapped_lines)
+
+
+def print_wrapped(text: str, width: int = 80) -> str:
+    print(wrap_text(text, width))
+
+
+def full_display(df, max_rows=None, max_colwidth=None):
+    with pd.option_context(
+        "display.max_rows",
+        max_rows,
+        "display.max_colwidth",
+        max_colwidth,
+    ):
+        display(df)
+
 
 TEMPLATE_DISPLAY_FOLDABLE = Template(
     "<details$show_open><summary>$display_name</summary>$display_df</details>"
@@ -66,13 +88,19 @@ def display_foldable(
     return html
 
 
-def table_renderer(data, show_open, level=0, max_level_tables=1, max_level_expanders=None):
+def table_renderer(
+    data, show_open, level=0, max_level_tables=1, max_level_expanders=None
+):
     """
     Formats data as a table, potentially with expanders. When the value is simply str, float, int
     it just shows the value. But When being (dict, list, set, tuple), it might be formatted as a
     table with expanders
     """
-    if isinstance(data, (str, float, int)) or max_level_tables is None or level > max_level_tables:
+    if (
+        isinstance(data, (str, float, int))
+        or max_level_tables is None
+        or level > max_level_tables
+    ):
         return f"{data}"
     if max_level_expanders is not None and level > max_level_expanders:
         s = f"<details{show_open}><table>"
@@ -92,7 +120,7 @@ def table_renderer(data, show_open, level=0, max_level_tables=1, max_level_expan
             s += f"<tr><td>{table_renderer(item, **formatter_kwargs)}</td></tr>"
     else:
         # raise NotImplementedError(str(type(data)))
-        s+= str(data)
+        s += str(data)
     if max_level_expanders is not None and level > max_level_expanders:
         return s + "</tbody></table></details>"
     else:

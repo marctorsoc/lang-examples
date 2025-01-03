@@ -7,17 +7,28 @@ Examples and good practices on langgraph, langfuse, and friends.
 For any example to your work, you'll need to install the common package:
 ```bash
 cd lang-examples-common
-uv pip install -r requirements.txt
+uv pip install -r pyproject.toml
 uv pip install -e .
 ```
 I strongly recommend using `uv`, but if you don't have it installed, simply
 remove it from the command. I also recommend using `conda` environments for
 each example.
 
+## (Optional) Set up ollama
 
-## Create your environment file
+If using ollama, we need to:
 
-Create a .env.private file and add the following environment variables:
+1. Install. Download for Mac, then leave it running
+2. Run `ollama run llama3.2`
+
+After the download, we can quit with Ctrl+D, and it will continue in the background.
+Check models with `ollama ls` and those running with `ollama ps`. 
+When done, use `ollama stop llama3.2`.
+
+
+## (Optional) Create env.private file
+
+If we use openAI, we need `.env.private` file with the following environment variables:
 ```
 OPENAI_API_KEY=sk-...
 ORGANIZATION_ID=org-...
